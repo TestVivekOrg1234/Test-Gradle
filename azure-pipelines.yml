@@ -1,0 +1,44 @@
+trigger:
+  branches:
+   include:
+     - Temp_Changes 
+     - master 
+
+
+variables:
+  buildPlatform: 'x64'
+  imageName: 'windows-2019'
+  artifactName: 'Ideploy-drop'
+  gradleOption: '-Xmx3072m'
+  jdkVersion: '1.8'
+  gradleFile: 'gradlew'
+  contentPath: '**/target/*.jar'
+  option: '@option'
+
+pool:
+    vmImage: '$(imageName)'
+
+steps:
+- task: Gradle@2
+  inputs:
+    workingDirectory: ' '
+    gradleWrapperFile: '$(gradleFile)'
+    gradleOptions: '$(gradleOption)'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '$(jdkVersion)'
+    jdkArchitectureOption: '$(buildPlatform)'
+    publishJUnitResults: false
+    
+    tasks: 'build'
+   
+- task: CopyFiles@2
+  inputs:
+    contents: '$(contentPath)'
+    targetFolder: '$(build.artifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  condition: succeededOrFailed()
+  inputs:
+    artifactName: '$(artifactName)'
+    pathToPublish: '$(build.artifactStagingDirectory)'
+
